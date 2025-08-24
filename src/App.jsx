@@ -293,6 +293,55 @@ function ActivityRingsRandom() {
   );
 }
 
+
+function RainButton({ on, toggle, calm, disabled = false }) {
+  return (
+    <div className="relative select-none">
+      <motion.button
+        type="button"
+        onClick={() => !disabled && toggle?.()}
+        className={cn(
+          "relative grid place-items-center rounded-full",
+          "h-24 w-24 ring-1 ring-black/10 overflow-hidden",
+          "bg-white/70 backdrop-blur",
+          disabled ? "opacity-50 cursor-not-allowed" : "hover:bg-white"
+        )}
+        title={disabled ? "Rain unavailable" : on ? "Click to stop rain" : "Click to play rain"}
+        initial={false}
+        animate={{ scale: on ? 1 : 0.985 }}
+        transition={{ type: "spring", stiffness: 250, damping: 22 }}
+      >
+        {/* soft glass highlight */}
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(120px_80px_at_30%_20%,rgba(255,255,255,0.6),transparent_60%)]" />
+
+        {/* subtle pulse ring only when ON */}
+        <motion.span
+          className="pointer-events-none absolute inset-0 rounded-full border border-black/10"
+          initial={{ scale: 0.75, opacity: 0 }}
+          animate={on ? { scale: [0.75, 1.15], opacity: [0.35, 0] } : { scale: 0.9, opacity: 0 }}
+          transition={{ duration: calm ? 7 : 5, repeat: on ? Infinity : 0, ease: "easeOut" }}
+        />
+
+        {/* icon only */}
+        <AnimatePresence initial={false} mode="wait">
+          {on ? (
+            <motion.div key="on" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="relative z-10 text-lg">
+              🌧️
+            </motion.div>
+          ) : (
+            <motion.div key="off" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.18 }} className="relative z-10 text-lg">
+              ☁️
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.button>
+      {/* tiny hint below (optional) */}
+      <div className="mt-1 text-[10px] text-center opacity-60">{disabled ? "N/A" : "click to toggle"}</div>
+    </div>
+  );
+}
+
+
 /* ============ Weather (Athens, respects Wi-Fi) ============ */
 function WeatherCard({ online }) {
   const [temp, setTemp] = useState(null);
@@ -415,18 +464,27 @@ function FocusSession({ calm, onEnd, rain, online, isTouch }) {
 
           <InnerCard title="Ambient Rain" hint={rainSupported ? "Loops seamlessly" : "Unavailable"}>
             <div className="flex flex-col items-center justify-center gap-3">
-              <button
-                onClick={() => rainSupported && setRainOn((v) => !v)}
-                className={cn("rounded-[28px] px-4 py-2 text-sm ring-1 ring-black/10", rainOn ? "bg-black/90 text-white" : "bg-white/70 hover:bg-white")}
-                title={rainSupported ? (rainOn ? "Stop rain" : "Play rain") : "Unavailable"}
-              >
-                {rainSupported ? (rainOn ? "Stop Rain" : "Play Rain") : "Rain N/A"}
-              </button>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] opacity-70">Volume</span>
-                <input type="range" min="0" max="1" step="0.01" value={rainVol} onChange={(e) => setRainVol(Number(e.target.value))} className="w-36 accent-black" disabled={!rainOn}/>
+              <div className="flex flex-col items-center justify-center gap-4">
+                <RainButton
+                  on={rainOn}
+                  toggle={() => rainSupported && setRainOn(v => !v)}
+                  calm={calm}
+                  disabled={!rainSupported}
+                />
+                <div className="flex items-center gap-2">
+                  <span className="text-[11px] opacity-70">Volume</span>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.01"
+                    value={rainVol}
+                    onChange={(e) => setRainVol(Number(e.target.value))}
+                    className="w-36 accent-black"
+                    disabled={!rainOn}
+                  />
+                </div>
               </div>
-              <motion.div className="mt-2 h-24 w-24 rounded-full ring-1 ring-black/10 bg-white/60" animate={calm ? { scale:[1,1.08,1] } : { scale:[1,1.12,1] }} transition={{ duration: calm ? 7 : 5, repeat: Infinity }}/>
             </div>
           </InnerCard>
         </div>
