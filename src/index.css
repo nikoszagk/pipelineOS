@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+/* Optional: smoothing for the liquid look */
+html, body, #root { height: 100%; }
+* { -webkit-tap-highlight-color: transparent; }
